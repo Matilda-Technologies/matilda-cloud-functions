@@ -1,5 +1,5 @@
 const functions = require('firebase-functions');
-
+const { WebhookClient } = require('dialogflow-fulfillment');
 
 const cors = require('cors')({
   origin: true
@@ -45,9 +45,7 @@ exports.dialogflowGateway = functions.https.onRequest((request, response) => {
   });
 });
 
-const {
-  WebhookClient
-} = require('dialogflow-fulfillment');
+
 
 exports.dialogflowWebhook = functions.https.onRequest(async (request, response) => {
   const agent = new WebhookClient({
@@ -120,15 +118,47 @@ exports.createJobId = functions.firestore
     var beginningDate = Date.now() - 604800000;
     var beginningDateObject = new Date(beginningDate);
 
-    const snapshot = db.collection("jobs").where('advertisedUntil', '<', beginningDateObject).get();
+    let snapshot = db.collection("jobs").where('advertisedUntil', '<', beginningDateObject).get();
     if (snapshot.empty) {
       console.log('No matching documents.');
       return;
     }
     snapshot.forEach(doc => {
-      const res = db.collection("jobs").doc(doc.id).delete();
+      doc.delete();
       console.log(res)
     });
+
+
+    snapshot = db.collection("jobs").where('datePosted', '==', null).get();
+    if (snapshot.empty) {
+      console.log('No matching documents.');
+      return;
+    }
+    snapshot.forEach(doc => {
+      doc.delete();
+      console.log(res)
+    });
+
+
+    snapshot = db.collection("jobs").where('advertisedUntil', '==', null).get();
+    if (snapshot.empty) {
+      console.log('No matching documents.');
+      return;
+    }
+    snapshot.forEach(doc => {
+
+      time = new Date().getDate() - 30
+      if (time > doc.data().datePosted) {
+        doc.delete()
+      }
+
+      console.log(res)
+    });
+
+
+
+
+
 
   console.log('This will be run every day at 11:05 AM Eastern!');
 });
